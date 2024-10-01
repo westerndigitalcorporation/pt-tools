@@ -35,7 +35,7 @@ license.
 
 ## Requirements
 
-The following packages must be installed prior to compiling *cdladm*.
+The following packages must be installed prior to compiling *pt-tools*.
 
 * autoconf
 * autoconf-archive
@@ -44,7 +44,7 @@ The following packages must be installed prior to compiling *cdladm*.
 
 ## Compilation and Installation
 
-The following commands will compile the *cdladm* utility.
+The following commands will compile the *ptio* utility.
 
 ```
 $ sh ./autogen.sh
