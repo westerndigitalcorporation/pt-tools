@@ -1,0 +1,104 @@
+.\"  SPDX-License-Identifier: GPL-2.0-or-later
+.\"
+.\"  Copyright (C) 2024, Western Digital Corporation or its affiliates.
+.\"  Written by Damien Le Moal <damien.lemoal@wdc.com>
+.\"
+.TH ptio 8 "Oct 1 2024"
+.SH NAME
+ptio \- Execute SCSI and ATA passthrough commands
+
+.SH SYNOPSIS
+.B ptio
+[
+.B \-h|\-\-help
+]
+.sp
+.B ptio
+[
+.B \-\-version
+]
+.sp
+.B ptio
+[
+.B options
+]
+.I device
+
+.SH DESCRIPTION
+.B ptio
+is used to issue and execute commands on SCSI or ATA devices. \fIdevice\fP
+specifies the device file path of the target device to operate on. The device
+file path may point either to a block device file or to the device SG node file
+of the device.  \fBptio\fR returns 0 on success and 1 in case of error.
+
+.SH OPTIONS
+
+.TP
+\fB\-\-version\fR
+Display \fBptio\R version and exit.
+
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Display a short usage message and exit.
+
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+Verbose output (for debugging).
+
+.TP
+.BI \-\-info
+Display device information and exit.
+
+.TP
+.BI \-\-revalidate
+Force the kernel to revalidate the device (re-scan the device) and exit.
+
+.TP
+.BI \-\-scsi\-cdb " hex-string"
+Specify the CDB of the SCSI command to execute as a string of space separated
+hexadecimal values, with one value per byte of the CDB. The number of values
+in the string must be equal to the size of the command CDB. E.g. for a 6-bytes
+INQUIRY command, the CDB string must be "12 01 00 02 00 00".
+
+.TP
+.BI \-\-ata\-cdb " hex-string"
+Specify the CDB of the ATA command to execute as a string of space separated
+hexadecimal values, with one value per byte of the CDB. The number of values
+in the string must be equal to the size of the command CDB. For a 28-bits ATA
+command, the CDB must be 8 bytes long, and has the format:
+"feat cnt lba[27:24] lba[23:16] lba[15:8] lba[0:7] dev cmd"
+For a 48-bits ATA command, the stirng format must be:
+"feat[15:8] feat[7:0] cnt[15:8] cnt[7:0] lba[47:40] lba[39:32] lba[31:24] lba[23:16] lba[15:8] lba[0:7] dev cmd".
+
+.TP
+.BI \-\-in\-buf " path"
+For a command that requies input data, specify the path of the file containing
+the data. The size of the file is used as the size of the buffer for the command.
+
+.TP
+.BI \-\-out\-buf " path"
+For a command that generates output data, specify the path of the file to which
+the data should be saved.
+
+.TP
+.BI \-\-bufsz " size"
+The size in bytes of the buffer for a command that generates output data. This option
+is ignored if the option \fB--in-buf\fR is used.
+
+.TP
+.BI \-\-to\-dev
+Specify that the command transfers data from the host to the device.
+The data to be transfered can be specified using the option \fB--in-buf\fR.
+
+.TP
+.BI \-\-to\-dev
+Specify that the command transfers data from the device to the host.
+The size of the transfered data must be specified using the option
+\fB--bufsz\fR.
+
+.SH AUTHOR
+This version of \fBptio\fR was written by Damien Le Moal.
+
+.SH AVAILABILITY
+.B ptio
+is available from https://bitbucket.wdc.com/users/damien.lemoal_wdc.com/repos/pt-tools
