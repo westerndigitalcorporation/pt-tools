@@ -272,134 +272,10 @@ void ptio_print_buf(uint8_t *buf, size_t bufsz)
 	printf("  +----------+-------------------------------------------------+\n");
 }
 
-/*
- * Status codes.
- */
-#define PTIO_CHECK_CONDITION    0x02
-
-/*
- * Host status codes.
- */
-#define PTIO_DID_OK             0x00 /* No error */
-#define PTIO_DID_NO_CONNECT     0x01 /* Couldn't connect before timeout period */
-#define PTIO_DID_BUS_BUSY       0x02 /* BUS stayed busy through time out period */
-#define PTIO_DID_TIME_OUT       0x03 /* Timed out for other reason */
-#define PTIO_DID_BAD_TARGET     0x04 /* Bad target, device not responding? */
-#define PTIO_DID_ABORT          0x05 /* Told to abort for some other reason. */
-#define PTIO_DID_PARITY         0x06 /* Parity error. */
-#define PTIO_DID_ERROR          0x07 /* Internal error detected in the host adapter. */
-#define PTIO_DID_RESET          0x08 /* The SCSI bus (or this device) has been reset. */
-#define PTIO_DID_BAD_INTR       0x09 /* Got an unexpected interrupt */
-#define PTIO_DID_PASSTHROUGH    0x0a /* Forced command past mid-layer. */
-#define PTIO_DID_SOFT_ERROR     0x0b /* The low level driver wants a retry. */
-
-static const char *ptio_host_status[] =
-{
-        "DID_OK",
-        "DID_NO_CONNECT",
-        "DID_BUS_BUSY",
-        "DID_TIME_OUT",
-        "DID_BAD_TARGET",
-        "DID_ABORT",
-        "DID_PARITY",
-        "DID_ERROR",
-        "DID_RESET",
-        "DID_BAD_INTR",
-        "DID_PASSTHROUGH",
-        "DID_SOFT_ERROR"
-};
-
-static const char *ptio_host_status_str(uint8_t status)
-{
-        if (status <= PTIO_DID_SOFT_ERROR)
-                return ptio_host_status[status];
-        return "???";
-}
-
-/*
- * Driver status codes.
- */
-#define PTIO_DRIVER_OK			0x00
-#define PTIO_DRIVER_BUSY		0x01
-#define PTIO_DRIVER_SOFT		0x02
-#define PTIO_DRIVER_MEDIA		0x03
-#define PTIO_DRIVER_ERROR		0x04
-#define PTIO_DRIVER_INVALID		0x05
-#define PTIO_DRIVER_TIMEOUT		0x06
-#define PTIO_DRIVER_HARD		0x07
-#define PTIO_DRIVER_SENSE		0x08
-#define PTIO_DRIVER_STATUS_MASK		0x0f
-
-/*
- * Driver status code flags ('or'ed with code)
- */
-#define PTIO_DRIVER_SUGGEST_RETRY	0x10
-#define PTIO_DRIVER_SUGGEST_ABORT	0x20
-#define PTIO_DRIVER_SUGGEST_REMAP	0x30
-#define PTIO_DRIVER_SUGGEST_DIE		0x40
-#define PTIO_DRIVER_SUGGEST_SENSE	0x80
-#define PTIO_DRIVER_FLAGS_MASK		0xf0
-
 #define ptio_cmd_driver_status(cmd)	((cmd)->io_hdr.driver_status & \
 					 PTIO_DRIVER_STATUS_MASK)
 #define ptio_cmd_driver_flags(cmd)	((cmd)->io_hdr.driver_status &  \
 					 PTIO_DRIVER_FLAGS_MASK)
-
-static const char *ptio_driver_status[] =
-{
-	"DRIVER_OK",
-	"DRIVER_BUSY",
-	"DRIVER_SOFT",
-	"DRIVER_MEDIA",
-	"DRIVER_ERROR",
-	"DRIVER_INVALID",
-	"DRIVER_TIMEOUT",
-	"DRIVER_INVALID",
-	"DRIVER_TIMEOUT",
-	"DRIVER_HARD",
-	"DRIVER_SENSE",
-};
-
-static const char *ptio_driver_status_str(uint8_t status)
-{
-	if (status <= PTIO_DID_SOFT_ERROR)
-		return ptio_driver_status[status];
-	return "???";
-}
-
-/*
- * Get command ASC/ASCQ.
- */
-static void ptio_scsi_get_sense(struct ptio_cmd *cmd)
-{
-	unsigned int sense_buf_len = cmd->io_hdr.sb_len_wr;
-	uint8_t *sense_buf = cmd->sense_buf;
-
-	if (sense_buf_len < 4) {
-		cmd->sense_key = 0;
-		cmd->asc_ascq = 0;
-		return;
-	}
-
-	if ((sense_buf[0] & 0x7F) == 0x72 || (sense_buf[0] & 0x7F) == 0x73) {
-		/* store sense key, ASC/ASCQ */
-		cmd->sense_key = sense_buf[1] & 0x0F;
-		cmd->asc_ascq = ((int)sense_buf[2] << 8) | (int)sense_buf[3];
-		return;
-	}
-
-	if (sense_buf_len < 14) {
-		cmd->sense_key = 0;
-		cmd->asc_ascq = 0;
-		return;
-	}
-
-	if ((sense_buf[0] & 0x7F) == 0x70 || (sense_buf[0] & 0x7F) == 0x71) {
-		/* store sense key, ASC/ASCQ */
-		cmd->sense_key = sense_buf[2] & 0x0F;
-		cmd->asc_ascq = ((int)sense_buf[12] << 8) | (int)sense_buf[13];
-	}
-}
 
 int ptio_exec_cmd(struct ptio_dev *dev, struct ptio_cmd *cmd,
 		 uint8_t *cdb, size_t cdbsz, enum ptio_cdb_type cdb_type,
@@ -482,26 +358,9 @@ int ptio_exec_cmd(struct ptio_dev *dev, struct ptio_cmd *cmd,
 		return ret;
 	}
 
-	if (cmd->io_hdr.status || cmd->io_hdr.host_status != PTIO_DID_OK ||
-	    (ptio_cmd_driver_status(cmd) &&
-	     (ptio_cmd_driver_status(cmd) != PTIO_DRIVER_SENSE))) {
-		if (cmd->io_hdr.host_status == PTIO_DID_TIME_OUT) {
-			ptio_dev_err(dev, "SCSI command failed (timeout)\n");
-			return -ETIMEDOUT;
-		}
-
-		ptio_dev_err(dev, "SCSI command failed host %s, driver %s\n",
-			     ptio_host_status_str(cmd->io_hdr.status),
-			     ptio_driver_status_str(ptio_cmd_driver_status(cmd)));
-
-		ptio_scsi_get_sense(cmd);
-
-		ptio_dev_err(dev,
-			     "SCSI command sense key 0x%02x, asc/ascq 0x%04x\n",
-			     cmd->sense_key, cmd->asc_ascq);
-
-		return -EIO;
-	}
+	ret = ptio_get_sense(dev, cmd);
+	if (ret)
+		return ret;
 
 	if (cmd->io_hdr.resid) {
 		ptio_dev_info(dev, "SCSI command residual: %u B\n",

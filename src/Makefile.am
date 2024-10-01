@@ -6,7 +6,8 @@ AM_CFLAGS = -O2 -Wall -Wextra -Wno-unused-parameter -D_GNU_SOURCE
 
 bin_PROGRAMS = ptio
 
-CFILES = ptio_dev.c \
+CFILES = ptio_sense.c \
+	 ptio_dev.c \
 	 ptio_scsi.c \
 	 ptio_ata.c \
 	 ptio.c

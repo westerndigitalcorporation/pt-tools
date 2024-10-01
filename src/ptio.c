@@ -89,10 +89,8 @@ static int ptio_exec(struct ptio_dev *dev, char *cdb_str,
 
 	/* Execute the command */
 	ret = ptio_exec_cmd(dev, &cmd, cdb, cdbsz, cdb_type, buf, bufsz, dxfer);
-	if (ret) {
-		ptio_dev_err(dev, "Command failed\n");
+	if (ret)
 		return ret;
-	}
 
 	if (dxfer == PTIO_DXFER_FROM_DEV) {
 		if (buf_path) {

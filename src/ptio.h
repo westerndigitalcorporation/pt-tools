@@ -105,6 +105,9 @@ struct ptio_cmd {
 	uint16_t		asc_ascq;
 };
 
+/* In ptio_sense.c */
+int ptio_get_sense(struct ptio_dev *dev, struct ptio_cmd *cmd);
+
 /* In ptio_dev.c */
 int ptio_open_dev(struct ptio_dev *dev, mode_t mode);
 void ptio_close_dev(struct ptio_dev *dev);
