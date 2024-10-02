@@ -99,10 +99,8 @@ static bool ptio_ata_match_fq(struct ptio_ata_cmd *cmd,
 {
 	uint16_t count;
 
-	if (!ptio_ata_match_opcode(cmd, cdb, cdbsz)) {
-		printf(" fq no match opcode\n");
+	if (!ptio_ata_match_opcode(cmd, cdb, cdbsz))
 		return false;
-	}
 
 
 	/* Count field */
@@ -110,7 +108,6 @@ static bool ptio_ata_match_fq(struct ptio_ata_cmd *cmd,
 		count = ((uint16_t)cdb[2] << 8) | (uint16_t)cdb[3];
 	else
 		count = (uint16_t)cdb[1];
-	printf(" count %x match data %x\n", count, cmd->match_data);
 
 	/* Bits 12:8 of count field */
 	return ((count >> 8) & 0x0F) == cmd->match_data;
@@ -385,7 +382,7 @@ int ptio_ata_prepare_cdb(struct ptio_dev *dev, struct ptio_cmd *cmd,
 	}
 
 	if (ptio_verbose(dev))
-		printf("ATA Command: %s\n", atacmd->name);
+		ptio_dev_info(dev, "ATA Command: %s\n", atacmd->name);
 
 	if (!atacmd->lba_48) {
 		if (cdbsz != PTIO_ATA_LBA28_CDBSZ) {
