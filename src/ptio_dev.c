@@ -317,6 +317,11 @@ int ptio_exec_cmd(struct ptio_dev *dev, struct ptio_cmd *cmd,
 		}
 		break;
 	case PTIO_CDB_ATA:
+		if (!ptio_dev_is_ata(dev)) {
+			ptio_dev_err(dev, "not an ATA device\n");
+			return -EIO;
+		}
+
 		ret = ptio_ata_prepare_cdb(dev, cmd, cdb, cdbsz);
 		if (ret) {
 			ptio_dev_err(dev, "Prepare ATA CDB failed\n");
