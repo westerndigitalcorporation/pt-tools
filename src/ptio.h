@@ -109,7 +109,7 @@ struct ptio_cmd {
 int ptio_get_sense(struct ptio_dev *dev, struct ptio_cmd *cmd);
 
 /* In ptio_dev.c */
-int ptio_open_dev(struct ptio_dev *dev, mode_t mode);
+int ptio_open_dev(struct ptio_dev *dev, enum ptio_dxfer dxfer);
 void ptio_close_dev(struct ptio_dev *dev);
 int ptio_revalidate_dev(struct ptio_dev *dev);
 int ptio_get_dev_information(struct ptio_dev *dev);

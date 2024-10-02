@@ -548,9 +548,10 @@ int ptio_write_buf(char *path, uint8_t *buf, size_t bufsz)
 /*
  * Open a device.
  */
-int ptio_open_dev(struct ptio_dev *dev, mode_t mode)
+int ptio_open_dev(struct ptio_dev *dev, enum ptio_dxfer dxfer)
 {
 	struct stat st;
+	mode_t mode;
 
 	/* Check that this is a block device */
 	if (stat(dev->path, &st) < 0) {
@@ -566,6 +567,19 @@ int ptio_open_dev(struct ptio_dev *dev, mode_t mode)
 	}
 
 	/* Open device */
+	switch (dxfer) {
+	case PTIO_DXFER_TO_DEV:
+		mode = O_RDWR;
+		break;
+	case PTIO_DXFER_NONE:
+	case PTIO_DXFER_FROM_DEV:
+		mode = O_RDONLY;
+		break;
+	default:
+		fprintf(stderr, "Invalid dxfer type\n");
+		return -1;
+	}
+
 	dev->fd = open(dev->path, mode | O_EXCL);
 	if (dev->fd < 0) {
 		fprintf(stderr, "Open %s failed %d (%s)\n",

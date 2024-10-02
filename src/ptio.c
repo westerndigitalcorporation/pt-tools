@@ -59,7 +59,7 @@ static int ptio_revalidate(struct ptio_dev *dev)
 }
 
 static int ptio_exec(struct ptio_dev *dev, char *cdb_str,
-		     enum ptio_cdb_type cdb_type, int dxfer,
+		     enum ptio_cdb_type cdb_type, enum ptio_dxfer dxfer,
 		     char *buf_path, size_t bufsz)
 {
 	struct ptio_cmd cmd;
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 	struct ptio_dev dev;
 	char *cdb_str = NULL;
 	enum ptio_cdb_type cdb_type = PTIO_CDB_NONE;
-	int dxfer = PTIO_DXFER_NONE;
+	enum ptio_dxfer dxfer = PTIO_DXFER_NONE;
 	char *buf_path = NULL;
 	int bufsz = 0;
 	int i, ret;
@@ -277,7 +277,7 @@ invalid_cmdline:
 	}
 
 	/* Open the device and printf some information about it */
-	ret = ptio_open_dev(&dev, O_RDWR);
+	ret = ptio_open_dev(&dev, dxfer);
 	if (ret)
 		return 1;
 
