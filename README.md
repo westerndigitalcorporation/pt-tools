@@ -185,6 +185,7 @@ Command result 13 Bytes:
 ```
 
 Execute the IDENTIFY ATA command:
+
 ```
 $ sudo ptio --bufsz 512 --from-dev --ata-cdb "00 00 00 00 00 00 00 EC" /dev/sdc
 Command result 512 Bytes:
