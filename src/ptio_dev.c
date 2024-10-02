@@ -522,7 +522,7 @@ int ptio_write_buf(char *path, uint8_t *buf, size_t bufsz)
 	ssize_t ret;
 	int fd;
 
-	fd = open(path, O_WRONLY | O_CREAT);
+	fd = open(path, O_WRONLY | O_CREAT, 0644);
 	if (fd < 0) {
 		fprintf(stderr, "Open %s failed %d (%s)\n",
 			path, errno, strerror(errno));
