@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (c) 2024 Western Digital Corporation or its affiliates.
+ * SPDX-FileCopyrightText: 2024 Western Digital Corporation or its affiliates.
  *
  * Authors: Damien Le Moal (damien.lemoal@wdc.com)
  */
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
@@ -12,7 +14,8 @@
 #include <fcntl.h>
 #include <sys/utsname.h>
 
-#include "ptio.h"
+#include "libptio/ptio.h"
+#include "config.h"
 
 static int ptio_information(struct ptio_dev *dev)
 {
@@ -20,7 +23,7 @@ static int ptio_information(struct ptio_dev *dev)
 
 	ret = ptio_get_dev_information(dev);
 	if (ret) {
-		ptio_dev_err(dev, "Get device information failed\n");
+		fprintf(stderr, "Get device information failed\n");
 		return ret;
 	}
 
@@ -51,7 +54,7 @@ static int ptio_revalidate(struct ptio_dev *dev)
 
 	ret = ptio_revalidate_dev(dev);
 	if (ret) {
-		ptio_dev_err(dev, "Revalidate failed\n");
+		fprintf(stderr, "Revalidate failed\n");
 		return ret;
 	}
 

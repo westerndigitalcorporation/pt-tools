@@ -1,9 +1,9 @@
-Copyright (C) 2024, Western Digital Corporation or its affiliates.
+SPDX-FileCopyrightText: 2024 Western Digital Corporation or its affiliates.
 
 # <p align="center">Passthrough IO tools</p>
 
-This project provides the *ptio* command line utility to execute SCSI or ATA
-passthrough commands.
+This project provides the *ptio* library and command line utility to execute
+SCSI or ATA passthrough commands.
 
 ## License
 
@@ -44,7 +44,7 @@ The following packages must be installed prior to compiling *pt-tools*.
 
 ## Compilation and Installation
 
-The following commands will compile the *ptio* utility.
+The following commands will compile the *ptio* library and command line utility.
 
 ```
 $ sh ./autogen.sh
@@ -52,16 +52,17 @@ $ ./configure
 $ make
 ```
 
-To install the compiled executable file and the man page for the *ptio*
-utility, the following command can be used.
+To install the compiled library and the utilities and their man pages, the
+use the following command.
 
 ```
 $ sudo make install
 ```
 
-The default installation directory is /usr/bin. This default location can be
-changed using the configure script. Executing the following command displays
-the options used to control the installation path.
+The default installation directory is /usr/lib64 for the *libptio.so* library.
+The utilities executable files are installed by default under /usr/bin.
+This default location can be changed using the configure script. Executing the
+following command displays the options used to control the installation path.
 
 ```
 $ ./configure --help
@@ -79,13 +80,13 @@ $ ./configure
 $ make rpm
 ```
 
-Five RPM packages are built: a binary package providing *ptio* executable
-and its documentation, a source RPM package, a *debuginfo*
-RPM package and a *debugsource* RPM package, and an RPM package containing the
-test suite.
+Seven RPM packages are built: a binary package providing the *libptio* library,
+a package providing *libptio* header file for development, a binary package
+providing the *ptio* command line utility and its documentation, a source RPM
+package, two *debuginfo* RPM packages and a *debugsource* RPM package.
 
 The source RPM package can be used to build the binary and debug RPM packages
-outside of *pt-tools* source tree using the following command.
+outside of the *pt-tools* source tree using the following command.
 
 ```
 $ rpmbuild --rebuild pt-tools-<version>.src.rpm
@@ -96,9 +97,8 @@ $ rpmbuild --rebuild pt-tools-<version>.src.rpm
 Read the [CONTRIBUTING](CONTRIBUTING) file and send patches to:
 
 	Damien Le Moal <damien.lemoal@wdc.com>
-	Niklas Cassel <niklas.cassel@wdc.com>
 
-# *ptio* Command Line Tool
+# *ptio* Command Line Utility
 
 The *ptio* command line tool allows executing SCSI or ATA passthrough commands.
 

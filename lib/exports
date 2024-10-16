@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# SPDX-FileCopyrightText: 2024 Western Digital Corporation or its affiliates.
+
+PTIO_GLOBAL {
+global:
+	ptio_open_dev;
+	ptio_close_dev;
+	ptio_revalidate_dev;
+	ptio_get_dev_information;
+	ptio_ata_acs_ver;
+	ptio_parse_cdb;
+	ptio_alloc_buf;
+	ptio_read_buf;
+	ptio_write_buf;
+	ptio_print_buf;
+	ptio_exec_cmd;
+local:
+	*;
+};
