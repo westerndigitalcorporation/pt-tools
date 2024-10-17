@@ -109,6 +109,9 @@ extern int ptio_exec_cmd(struct ptio_dev *dev, struct ptio_cmd *cmd,
 		uint8_t *cdb, size_t cdbsz, enum ptio_cdb_type cdb_type,
 		uint8_t *buf, size_t bufsz, enum ptio_dxfer dxfer);
 
+extern void ptio_print_sense(struct ptio_dev *dev,
+			     uint8_t *sense, size_t sensesz);
+
 static inline bool ptio_dev_is_ata(struct ptio_dev *dev)
 {
 	return dev->flags & PTIO_ATA;

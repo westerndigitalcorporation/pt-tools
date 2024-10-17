@@ -15,6 +15,7 @@ global:
 	ptio_write_buf;
 	ptio_print_buf;
 	ptio_exec_cmd;
+	ptio_print_sense;
 local:
 	*;
 };

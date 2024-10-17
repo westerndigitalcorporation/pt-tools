@@ -1061,36 +1061,31 @@ static inline const char *ptio_driver_status_str(uint8_t status)
 }
 
 /*
- * Get command ASC/ASCQ.
+ * Get sense key and ASC/ASCQ from sense data.
  */
-static void ptio_get_scsi_sense(struct ptio_cmd *cmd)
+static void ptio_get_scsi_sense(uint8_t *sense, size_t sensesz,
+				uint8_t *key, uint16_t *asc_ascq)
 {
-	unsigned int sense_buf_len = cmd->io_hdr.sb_len_wr;
-	uint8_t *sense_buf = cmd->sense_buf;
+	*key = 0;
+	*asc_ascq = 0;
 
-	if (sense_buf_len < 4) {
-		cmd->sense_key = 0;
-		cmd->asc_ascq = 0;
+	if (sensesz < 4)
 		return;
-	}
 
-	if ((sense_buf[0] & 0x7F) == 0x72 || (sense_buf[0] & 0x7F) == 0x73) {
+	if ((sense[0] & 0x7F) == 0x72 || (sense[0] & 0x7F) == 0x73) {
 		/* store sense key, ASC/ASCQ */
-		cmd->sense_key = sense_buf[1] & 0x0F;
-		cmd->asc_ascq = ((int)sense_buf[2] << 8) | (int)sense_buf[3];
+		*key = sense[1] & 0x0F;
+		*asc_ascq = ((int)sense[2] << 8) | (int)sense[3];
 		return;
 	}
 
-	if (sense_buf_len < 14) {
-		cmd->sense_key = 0;
-		cmd->asc_ascq = 0;
+	if (sensesz < 14)
 		return;
-	}
 
-	if ((sense_buf[0] & 0x7F) == 0x70 || (sense_buf[0] & 0x7F) == 0x71) {
+	if ((sense[0] & 0x7F) == 0x70 || (sense[0] & 0x7F) == 0x71) {
 		/* store sense key, ASC/ASCQ */
-		cmd->sense_key = sense_buf[2] & 0x0F;
-		cmd->asc_ascq = ((int)sense_buf[12] << 8) | (int)sense_buf[13];
+		*key = sense[2] & 0x0F;
+		*asc_ascq = ((int)sense[12] << 8) | (int)sense[13];
 	}
 }
 
@@ -1105,7 +1100,8 @@ int ptio_get_sense(struct ptio_dev *dev, struct ptio_cmd *cmd)
 			return -ETIMEDOUT;
 		}
 
-		ptio_get_scsi_sense(cmd);
+		ptio_get_scsi_sense(cmd->sense_buf, cmd->io_hdr.sb_len_wr,
+				    &cmd->sense_key, &cmd->asc_ascq);
 
 		ptio_dev_err(dev, "SCSI command failed: host status %s, driver status %s\n",
 			     ptio_host_status_str(cmd->io_hdr.host_status),
@@ -1124,4 +1120,17 @@ int ptio_get_sense(struct ptio_dev *dev, struct ptio_cmd *cmd)
 	}
 
 	return 0;
+}
+
+void ptio_print_sense(struct ptio_dev *dev, uint8_t *sense, size_t sensesz)
+{
+	uint16_t asc_ascq;
+	uint8_t key;
+
+	ptio_get_scsi_sense(sense, sensesz, &key, &asc_ascq);
+
+	ptio_dev_err(dev, "SCSI command sense key : 0x%02x   (%s)\n",
+		     key, ptio_sense_key_str(key));
+	ptio_dev_err(dev, "SCSI command asc/ascq  : 0x%04x (%s)\n",
+		     asc_ascq, ptio_asc_ascq_str(asc_ascq));
 }
