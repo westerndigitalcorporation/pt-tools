@@ -332,6 +332,8 @@ uint8_t *ptio_alloc_buf(size_t bufsz)
 		return NULL;
 	}
 
+	memset(buf, 0, bufsz);
+
 	return buf;
 }
 
