@@ -9,6 +9,7 @@ AM_CFLAGS = \
 
 pkgconfdir = $(libdir)/pkgconfig
 pkgconf_DATA = libptio.pc
+pkgincludedir = $(includedir)/libptio
 pkginclude_HEADERS = ../include/libptio/ptio.h
 
 lib_LTLIBRARIES = libptio.la
