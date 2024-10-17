@@ -114,4 +114,142 @@ static inline bool ptio_dev_is_ata(struct ptio_dev *dev)
 	return dev->flags & PTIO_ATA;
 }
 
+/*
+ * SCSI CDB and data access (big endian).
+ */
+static inline void ptio_set_be16(uint8_t *buf, uint16_t val)
+{
+	uint16_t *v = (uint16_t *)buf;
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	*v = __builtin_bswap16(val);
+#else
+	*v = val;
+#endif
+}
+
+static inline uint16_t ptio_get_be16(uint8_t *buf)
+{
+	uint16_t val = *((uint16_t *)buf);
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return __builtin_bswap16(val);
+#else
+	return val;
+#endif
+}
+
+static inline void ptio_set_be32(uint8_t *buf, uint32_t val)
+{
+	uint32_t *v = (uint32_t *)buf;
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	*v = __builtin_bswap32(val);
+#else
+	*v = val;
+#endif
+}
+
+static inline uint32_t ptio_get_be32(uint8_t *buf)
+{
+	uint32_t val = *((uint32_t *)buf);
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return __builtin_bswap32(val);
+#else
+	return val;
+#endif
+}
+
+static inline void ptio_set_be64(uint8_t *buf, uint64_t val)
+{
+	uint64_t *v = (uint64_t *)buf;
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	*v = __builtin_bswap64(val);
+#else
+	*v = val;
+#endif
+}
+
+static inline uint64_t ptio_get_be64(uint8_t *buf)
+{
+	uint64_t val = *((uint64_t *)buf);
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return __builtin_bswap64(val);
+#else
+	return val;
+#endif
+}
+
+/*
+ * ATA CDB and data access (little endian).
+ */
+static inline void ptio_set_le16(uint8_t *buf, uint16_t val)
+{
+	uint16_t *v = (uint16_t *)buf;
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	*v = val;
+#else
+	*v = __builtin_bswap16(val);
+#endif
+}
+
+static inline uint16_t ptio_get_le16(uint8_t *buf)
+{
+	uint16_t val = *((uint16_t *)buf);
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return val;
+#else
+	return __builtin_bswap16(val);
+#endif
+}
+
+static inline void ptio_set_le32(uint8_t *buf, uint32_t val)
+{
+	uint32_t *v = (uint32_t *)buf;
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	*v = val;
+#else
+	*v = __builtin_bswap32(val);
+#endif
+}
+
+static inline uint32_t ptio_get_le32(uint8_t *buf)
+{
+	uint32_t val = *((uint32_t *)buf);
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return val;
+#else
+	return __builtin_bswap32(val);
+#endif
+}
+
+static inline void ptio_set_le64(uint8_t *buf, uint64_t val)
+{
+	uint64_t *v = (uint64_t *)buf;
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	*v = val;
+#else
+	*v = __builtin_bswap64(val);
+#endif
+}
+
+static inline uint64_t ptio_get_le64(uint8_t *buf)
+{
+	uint64_t val = *((uint64_t *)buf);
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return val;
+#else
+	return __builtin_bswap64(val);
+#endif
+}
+
 #endif /* LIBPTIO_H */

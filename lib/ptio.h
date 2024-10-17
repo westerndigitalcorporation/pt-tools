@@ -18,18 +18,6 @@
 int ptio_get_sense(struct ptio_dev *dev, struct ptio_cmd *cmd);
 
 void ptio_get_str(char *dst, uint8_t *buf, int len);
-void ptio_set_be16(uint8_t *buf, uint16_t val);
-void ptio_set_be32(uint8_t *buf, uint32_t val);
-void ptio_set_be64(uint8_t *buf, uint64_t val);
-void ptio_set_le16(uint8_t *buf, uint16_t val);
-void ptio_set_le32(uint8_t *buf, uint32_t val);
-void ptio_set_le64(uint8_t *buf, uint64_t val);
-uint16_t ptio_get_be16(uint8_t *buf);
-uint32_t ptio_get_be32(uint8_t *buf);
-uint64_t ptio_get_be64(uint8_t *buf);
-uint16_t ptio_get_le16(uint8_t *buf);
-uint32_t ptio_get_le32(uint8_t *buf);
-uint64_t ptio_get_le64(uint8_t *buf);
 
 unsigned long ptio_sysfs_get_ulong_attr(struct ptio_dev *dev,
 				       const char *format, ...);
