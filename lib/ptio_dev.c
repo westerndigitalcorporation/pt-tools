@@ -244,6 +244,33 @@ static bool ptio_sysfs_exists(struct ptio_dev *dev, const char *format, ...)
 }
 
 /*
+ * Get a sysfs attribute value as a string.
+ */
+static int ptio_sysfs_get_attr(struct ptio_dev *dev, char *val, size_t sz,
+			       const char *format, ...)
+{
+	char path[PATH_MAX];
+	va_list argp;
+	FILE *f;
+	int ret = -1;
+
+	va_start(argp, format);
+	vsnprintf(path, sizeof(path) - 1, format, argp);
+	va_end(argp);
+
+	f = fopen(path, "r");
+	if (f) {
+		if (fscanf(f, "%s", val) != 1)
+			ret = -1;
+		else
+			ret = 0;
+		fclose(f);
+	}
+
+	return ret;
+}
+
+/*
  * Get a sysfs attribute value.
  */
 unsigned long ptio_sysfs_get_ulong_attr(struct ptio_dev *dev,
@@ -387,6 +414,38 @@ int ptio_write_buf(char *path, uint8_t *buf, size_t bufsz)
 	return 0;
 }
 
+static int ptio_dev_get_type(struct ptio_dev *dev, struct stat *st)
+{
+	char vendor[64];
+	bool is_ata;
+	int ret;
+
+	/* Check if this is an ATA device */
+	if (S_ISBLK(st->st_mode)) {
+		is_ata = ptio_sysfs_exists(dev,
+					   "/sys/block/%s/device/vpd_pg89",
+					   dev->name);
+	} else if (S_ISCHR(st->st_mode)) {
+		ret = ptio_sysfs_get_attr(dev, vendor, sizeof(vendor),
+				"/sys/class/scsi_generic/%s/device/vendor",
+				dev->name);
+		if (ret)
+			return -1;
+		is_ata = (strcmp(vendor, "ATA") == 0);
+	} else {
+		ptio_dev_err(dev, "Unsupported device file type\n");
+		return -1;
+	}
+
+	if (is_ata)
+		dev->flags |= PTIO_ATA;
+	else
+		dev->flags &= ~PTIO_ATA;
+
+	return 0;
+}
+
+
 /*
  * Open a device.
  */
@@ -394,6 +453,7 @@ int ptio_open_dev(struct ptio_dev *dev, enum ptio_dxfer dxfer)
 {
 	struct stat st;
 	mode_t mode;
+	int ret;
 
 	/* Check that this is a block device */
 	if (stat(dev->path, &st) < 0) {
@@ -422,7 +482,7 @@ int ptio_open_dev(struct ptio_dev *dev, enum ptio_dxfer dxfer)
 		return -1;
 	}
 
-	dev->fd = open(dev->path, mode | O_EXCL);
+	dev->fd = open(dev->path, mode);
 	if (dev->fd < 0) {
 		fprintf(stderr, "Open %s failed %d (%s)\n",
 			dev->path, errno, strerror(errno));
@@ -431,9 +491,13 @@ int ptio_open_dev(struct ptio_dev *dev, enum ptio_dxfer dxfer)
 
 	dev->name = basename(dev->path);
 
- 	/* Check if this is an ATA device */
-	if (ptio_sysfs_exists(dev, "/sys/block/%s/device/vpd_pg89", dev->name))
-		dev->flags |= PTIO_ATA;
+ 	/* Get the device type (ATA or SCSI) */
+	ret = ptio_dev_get_type(dev, &st);
+	if (ret) {
+		ptio_dev_err(dev, "Determine device type failed\n");
+		ptio_close_dev(dev);
+		return ret;
+	}
 
 	return 0;
 }
