@@ -36,8 +36,6 @@ enum ptio_dxfer {
  */
 #define PTIO_VERBOSE			(1 << 0)
 #define PTIO_ATA			(1 << 1)
-#define PTIO_INFO			(1 << 2)
-#define PTIO_REVALIDATE			(1 << 3)
 
 #define PTIO_VENDOR_LEN	9
 #define PTIO_ID_LEN	17

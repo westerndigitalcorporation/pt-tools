@@ -143,11 +143,18 @@ static void ptio_usage(void)
 	printf("See \"man ptio\" for more information.\n");
 }
 
+enum ptio_operation {
+	PTIO_OP_EXEC_CMD,
+	PTIO_OP_INFO,
+	PTIO_OP_REVALIDATE,
+};
+
 /*
  * Main function.
  */
 int main(int argc, char **argv)
 {
+	enum ptio_operation op = PTIO_OP_EXEC_CMD;
 	struct ptio_dev dev;
 	char *cdb_str = NULL;
 	enum ptio_cdb_type cdb_type = PTIO_CDB_NONE;
@@ -187,12 +194,12 @@ int main(int argc, char **argv)
 		}
 
 		if (strcmp(argv[i], "--info") == 0) {
-			dev.flags |= PTIO_INFO;
+			op = PTIO_OP_INFO;
 			continue;
 		}
 
 		if (strcmp(argv[i], "--revalidate") == 0) {
-			dev.flags |= PTIO_REVALIDATE;
+			op = PTIO_OP_REVALIDATE;
 			continue;
 		}
 
@@ -285,12 +292,21 @@ invalid_cmdline:
 	if (ret)
 		return 1;
 
-	if (dev.flags & PTIO_INFO)
+	switch (op) {
+	case PTIO_OP_INFO:
 		ret = ptio_information(&dev);
-	else if (dev.flags & PTIO_REVALIDATE)
+		break;
+	case PTIO_OP_REVALIDATE:
 		ret = ptio_revalidate(&dev);
-	else
+		break;
+	case PTIO_OP_EXEC_CMD:
 		ret = ptio_exec(&dev, cdb_str, cdb_type, dxfer, buf_path, bufsz);
+		break;
+	default:
+		fprintf(stderr, "Undefined operation\n");
+		ret = -1;
+		break;
+	}
 
 	ptio_close_dev(&dev);
 
