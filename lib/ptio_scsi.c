@@ -46,7 +46,7 @@ int ptio_scsi_vpd_inquiry(struct ptio_dev *dev, uint8_t page,
 
 	/* Execute the SG_IO command */
 	ret = ptio_exec_cmd(dev, &cmd, cdb, 6, PTIO_CDB_SCSI,
-			    buf, bufsz, PTIO_DXFER_FROM_DEV);
+			    buf, bufsz, PTIO_DXFER_FROM_DEV, 0);
 	if (ret) {
 		ptio_dev_err(dev, "Get VPD page 0x%02x failed\n", page);
 		return -EIO;
@@ -74,7 +74,7 @@ int ptio_scsi_get_information(struct ptio_dev *dev)
 	ptio_set_be16(&cdb[3], 64);
 
 	ret = ptio_exec_cmd(dev, &cmd, cdb, 16, PTIO_CDB_SCSI,
-			    buf, 64, PTIO_DXFER_FROM_DEV);
+			    buf, 64, PTIO_DXFER_FROM_DEV, 0);
 	if (ret) {
 		ptio_dev_err(dev, "INQUIRY failed\n");
 		return -1;
@@ -90,7 +90,7 @@ int ptio_scsi_get_information(struct ptio_dev *dev)
 	ptio_set_be32(&cdb[10], 32);
 
 	ret = ptio_exec_cmd(dev, &cmd, cdb, 16, PTIO_CDB_SCSI,
-			    buf, 32, PTIO_DXFER_FROM_DEV);
+			    buf, 32, PTIO_DXFER_FROM_DEV, 0);
 	if (ret) {
 		ptio_dev_err(dev, "READ CAPACITY failed\n");
 		return -1;

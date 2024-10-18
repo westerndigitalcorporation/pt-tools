@@ -116,14 +116,16 @@ void ptio_print_buf(uint8_t *buf, size_t bufsz)
 					 PTIO_DRIVER_FLAGS_MASK)
 
 int ptio_exec_cmd(struct ptio_dev *dev, struct ptio_cmd *cmd,
-		 uint8_t *cdb, size_t cdbsz, enum ptio_cdb_type cdb_type,
-		 uint8_t *buf, size_t bufsz, enum ptio_dxfer dxfer)
+		  uint8_t *cdb, size_t cdbsz, enum ptio_cdb_type cdb_type,
+		  uint8_t *buf, size_t bufsz, enum ptio_dxfer dxfer,
+		  uint32_t flags)
 {
 	int ret, sg_dxfer;
 
 	assert(cdbsz <= PTIO_CDB_MAX_SIZE);
 
 	memset(cmd, 0, sizeof(struct ptio_cmd));
+	cmd->flags = flags;
 
 	cmd->dxfer = dxfer;
 	switch (dxfer) {

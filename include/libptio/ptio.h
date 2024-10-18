@@ -75,10 +75,23 @@ struct ptio_dev {
 	unsigned long long	capacity;
 };
 
+/*
+ * Command flags.
+ */
+
+/* Force ATA PASSTHROUGH byte_block field to 0. */
+#define PTIO_CMD_ATA_ZERO_BYTE_BLOCK	(1 << 0)
+/* Force ATA PASSTHROUGH t_length to indicate number of LBAs */
+#define PTIO_CMD_ATA_LBA_LEN		(1 << 1)
+
+/*
+ * Command descriptor.
+ */
 struct ptio_cmd {
 	uint8_t			cdb[PTIO_CDB_MAX_SIZE];
 	size_t			cdbsz;
 	enum ptio_cdb_type	cdbtype;
+	uint32_t		flags;
 
 	uint8_t			*buf;
 	size_t			bufsz;
@@ -107,7 +120,8 @@ extern void ptio_print_buf(uint8_t *buf, size_t bufsz);
 
 extern int ptio_exec_cmd(struct ptio_dev *dev, struct ptio_cmd *cmd,
 		uint8_t *cdb, size_t cdbsz, enum ptio_cdb_type cdb_type,
-		uint8_t *buf, size_t bufsz, enum ptio_dxfer dxfer);
+			 uint8_t *buf, size_t bufsz, enum ptio_dxfer dxfer,
+			 uint32_t flags);
 
 extern void ptio_print_sense(struct ptio_dev *dev,
 			     uint8_t *sense, size_t sensesz);

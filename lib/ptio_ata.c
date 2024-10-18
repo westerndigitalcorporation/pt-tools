@@ -230,17 +230,40 @@ static struct ptio_ata_cmd ata_cmd[] =
 	{  },
 };
 
-static struct ptio_ata_cmd *ptio_ata_find_cmd(uint8_t *cdb, size_t cdbsz)
-{
-	struct ptio_ata_cmd *cmd = &ata_cmd[0];
+static struct ptio_ata_cmd vendor_atacmd;
 
-	while (cmd->name) {
-		if (cmd->match(cmd, cdb, cdbsz))
-			return cmd;
-		cmd++;
+static struct ptio_ata_cmd *ptio_ata_find_cmd(struct ptio_dev *dev,
+					      struct ptio_cmd *cmd,
+					      uint8_t *cdb, size_t cdbsz)
+{
+	struct ptio_ata_cmd *atacmd = &ata_cmd[0];
+
+	while (atacmd->name) {
+		if (atacmd->match(atacmd, cdb, cdbsz)) {
+			ptio_dev_verbose(dev, "ATA command %02Xh: %s\n",
+					 atacmd->opcode, atacmd->name);
+			return atacmd;
+		}
+		atacmd++;
 	}
 
-	return NULL;
+	/* Command not found: assume vendor unique command, non-ncq, DMA. */
+	ptio_dev_verbose(dev,
+			 "ATA command %02Xh not found: assuming vendor unique "
+			 "command, %d-bits, non NCQ, DMA\n",
+			 cdb[cdbsz - 1],
+			 cdbsz == PTIO_ATA_LBA48_CDBSZ ? 48 : 28);
+
+	vendor_atacmd.opcode = cdb[cdbsz - 1];
+	if (!cmd->bufsz)
+		vendor_atacmd.prot = PTIO_ATA_NOD;
+	else
+		vendor_atacmd.prot = PTIO_ATA_DMA;
+	vendor_atacmd.ncq = false;
+	vendor_atacmd.lba_48 = (cdbsz == PTIO_ATA_LBA48_CDBSZ);
+	vendor_atacmd.name = "Vendor unique";
+
+	return &vendor_atacmd;
 }
 
 /*
@@ -251,8 +274,8 @@ static int ptio_ata_prepare_scsi_cdb(struct ptio_dev *dev,
 				     struct ptio_ata_cmd *atacmd,
 				     uint8_t *cdb, size_t cdbsz)
 {
-	uint8_t t_dir, t_length = 0;
-	uint8_t prot, extend;
+	uint8_t t_dir, t_length, t_type;
+	uint8_t prot, extend, byte_block;
 	uint64_t lba;
 
 	/* ATA 16 Passthrough */
@@ -261,10 +284,6 @@ static int ptio_ata_prepare_scsi_cdb(struct ptio_dev *dev,
 
 	if (atacmd->ncq) {
 		prot = 0x0C;
-
-		/* FOr NCQ commands, length is in the feature field */
-		if (cmd->bufsz)
-			t_length = 0x1;
 	} else {
 		switch (atacmd->prot) {
 		case PTIO_ATA_NOD:
@@ -287,11 +306,30 @@ static int ptio_ata_prepare_scsi_cdb(struct ptio_dev *dev,
 				     atacmd->name);
 			return -1;
 		}
+	}
 
-		/* For non-NCQ commands, length is in the count field */
-		if (cmd->bufsz)
+	if (!cmd->bufsz) {
+		t_length = 0;
+	} else {
+		/*
+		 * For NCQ commands, length is in the feature field.
+		 * For non-NCQ commands, length is in the count field.
+		 */
+		if (atacmd->ncq)
+			t_length = 0x1;
+		else
 			t_length = 0x2;
 	}
+
+	if (cmd->flags & PTIO_CMD_ATA_ZERO_BYTE_BLOCK)
+		byte_block = 0;
+	else
+		byte_block = 1;
+
+	if (cmd->flags & PTIO_CMD_ATA_LBA_LEN)
+		t_type = 1;
+	else
+		t_type = 0;
 
 	if (atacmd->lba_48)
 		extend = 1;
@@ -304,8 +342,10 @@ static int ptio_ata_prepare_scsi_cdb(struct ptio_dev *dev,
 		t_dir = 0;
 
 	cmd->cdb[1] = ((prot & 0x0f) << 1) | (extend & 0x01);
-	cmd->cdb[2] = ((t_dir & 0x01) << 3) |
-		(1 << 2) | /* Number of 512-B blocks to be transferred */
+	cmd->cdb[2] =
+		((t_type & 0x01) << 4) |
+		((t_dir & 0x01) << 3) |
+		((byte_block & 0x01) << 2) |
 		(t_length & 0x03);
 
 	if (atacmd->lba_48) {
@@ -375,26 +415,18 @@ int ptio_ata_prepare_cdb(struct ptio_dev *dev, struct ptio_cmd *cmd,
 	}
 
 	/* Find a matching command for the CDB and re-check its size */
-	atacmd = ptio_ata_find_cmd(cdb, cdbsz);
-	if (!atacmd) {
-		ptio_dev_err(dev, "Unknown ATA command\n");
-		return -1;
-	}
-
-	if (ptio_verbose(dev))
-		ptio_dev_info(dev, "ATA Command: %s\n", atacmd->name);
-
-	if (!atacmd->lba_48) {
-		if (cdbsz != PTIO_ATA_LBA28_CDBSZ) {
-			ptio_dev_err(dev,
-				     "%s is a 28-bits commands: CDB must be %d B\n",
-				     atacmd->name, PTIO_ATA_LBA28_CDBSZ);
-			return -1;
-		}
-	} else if (cdbsz != PTIO_ATA_LBA48_CDBSZ) {
+	atacmd = ptio_ata_find_cmd(dev, cmd, cdb, cdbsz);
+	if (atacmd->lba_48 && cdbsz != PTIO_ATA_LBA48_CDBSZ) {
 		ptio_dev_err(dev,
 			     "%s is a 48-bits commands: CDB must be %d B\n",
 			     atacmd->name, PTIO_ATA_LBA48_CDBSZ);
+		return -1;
+	}
+
+	if ((!atacmd->lba_48) && cdbsz != PTIO_ATA_LBA28_CDBSZ) {
+		ptio_dev_err(dev,
+			     "%s is a 28-bits commands: CDB must be %d B\n",
+			     atacmd->name, PTIO_ATA_LBA28_CDBSZ);
 		return -1;
 	}
 
@@ -462,7 +494,7 @@ static int ptio_ata_read_log(struct ptio_dev *dev, uint8_t log,
 
 	/* Execute the command */
 	return ptio_exec_cmd(dev, cmd, cdb, 16, PTIO_CDB_SCSI,
-			     buf, bufsz, PTIO_DXFER_FROM_DEV);
+			     buf, bufsz, PTIO_DXFER_FROM_DEV, 0);
 }
 
 /*

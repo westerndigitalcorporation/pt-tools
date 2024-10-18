@@ -91,7 +91,8 @@ static int ptio_exec(struct ptio_dev *dev, char *cdb_str,
 		return -1;
 
 	/* Execute the command */
-	ret = ptio_exec_cmd(dev, &cmd, cdb, cdbsz, cdb_type, buf, bufsz, dxfer);
+	ret = ptio_exec_cmd(dev, &cmd, cdb, cdbsz, cdb_type, buf, bufsz,
+			    dxfer, 0);
 	if (ret)
 		return ret;
 
@@ -127,7 +128,7 @@ static void ptio_usage(void)
 	       "  --scsi-cdb <str> : Space separated hexadecimal string\n"
 	       "                     defining a SCSI cdb.\n"
 	       "  --ata-cdb <str>  : Space separated hexadecimal string\n"
-	       "                     defining a 28-bits 0r 48-bits ATA cdb.\n"
+	       "                     defining a 28-bits or 48-bits ATA cdb\n"
 	       "  --in-buf <path>  : Use the file <path> as the command input\n"
 	       "                     buffer. The file size will be used as the\n"
 	       "                     buffer size.\n"
