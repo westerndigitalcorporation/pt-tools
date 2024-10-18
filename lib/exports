@@ -16,6 +16,7 @@ global:
 	ptio_print_buf;
 	ptio_exec_cmd;
 	ptio_print_sense;
+	ptio_get_str;
 local:
 	*;
 };

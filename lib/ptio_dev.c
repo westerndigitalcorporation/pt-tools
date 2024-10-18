@@ -34,8 +34,11 @@ void ptio_get_str(char *dst, uint8_t *buf, int len)
 		       break;
 	}
 
-	if (i >= 0)
+	if (i >= 0) {
 		memcpy(dst, str, i + 1);
+		i++;
+	}
+	dst[i] = '\0';
 }
 
 /*

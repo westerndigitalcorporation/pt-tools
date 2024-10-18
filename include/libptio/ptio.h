@@ -129,6 +129,8 @@ static inline bool ptio_dev_is_ata(struct ptio_dev *dev)
 	return dev->flags & PTIO_ATA;
 }
 
+extern void ptio_get_str(char *dst, uint8_t *buf, int len);
+
 /*
  * SCSI CDB and data access (big endian).
  */

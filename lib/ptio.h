@@ -17,8 +17,6 @@
 
 int ptio_get_sense(struct ptio_dev *dev, struct ptio_cmd *cmd);
 
-void ptio_get_str(char *dst, uint8_t *buf, int len);
-
 unsigned long ptio_sysfs_get_ulong_attr(struct ptio_dev *dev,
 				       const char *format, ...);
 int ptio_sysfs_set_attr(struct ptio_dev *dev, const char *val,
