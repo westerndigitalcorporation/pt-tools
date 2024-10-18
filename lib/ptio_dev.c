@@ -86,31 +86,6 @@ int ptio_parse_cdb(char *cdb_str, uint8_t *cdb)
 }
 
 /*
- * Print a cdb
- */
-static void ptio_print_cdb(uint8_t *cdb, size_t cdbsz)
-{
-	unsigned int l = 0, i;
-
-	printf("  +----------+-------------------------------------------------+\n");
-	printf("  |  OFFSET  | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F |\n");
-	printf("  +----------+-------------------------------------------------+\n");
-
-	while (l < cdbsz) {
-		printf("  | %08x |", l);
-		for (i = 0; i < 16; i++, l++) {
-			if (l < cdbsz)
-				printf(" %02x", (unsigned int)cdb[l]);
-			else
-				printf("   ");
-		}
-		printf(" |\n");
-	}
-
-	printf("  +----------+-------------------------------------------------+\n");
-}
-
-/*
  * Print a buffer
  */
 void ptio_print_buf(uint8_t *buf, size_t bufsz)
@@ -199,7 +174,7 @@ int ptio_exec_cmd(struct ptio_dev *dev, struct ptio_cmd *cmd,
 	if (ptio_verbose(dev)) {
 		ptio_dev_info(dev, "Executing command, CDB %zu B, buffer %zu B:\n",
 			      cmd->cdbsz, cmd->bufsz);
-		ptio_print_cdb(cmd->cdb, cmd->cdbsz);
+		ptio_print_buf(cmd->cdb, cmd->cdbsz);
 	}
 
 	/* Setup SGIO header */
