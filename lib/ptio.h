@@ -45,10 +45,10 @@ static inline bool ptio_verbose(struct ptio_dev *dev)
 }
 
 #define ptio_dev_info(dev,format,args...)		\
-	printf("%s: " format, (dev)->name, ##args)
+	printf("PTIO (%s): " format, (dev)->name, ##args)
 
 #define ptio_dev_err(dev,format,args...)		\
-	fprintf(stderr, "[ERROR] %s: " format, (dev)->name, ##args)
+	fprintf(stderr, "PTIO (%s): [ERROR]: " format, (dev)->name, ##args)
 
 #define ptio_dev_verbose(dev,format,args...)		\
 	if (ptio_verbose(dev))				\
