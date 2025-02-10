@@ -85,6 +85,7 @@ int ptio_scsi_get_information(struct ptio_dev *dev)
 	ptio_get_str(dev->rev, &cmd.buf[32], PTIO_REV_LEN - 1);
 
 	/* Get capacity (READ CAPACITY 16) */
+	memset(cdb, 0, sizeof(cdb));
 	cdb[0] = 0x9e;
 	cdb[1] = 0x10;
 	ptio_set_be32(&cdb[10], 32);
