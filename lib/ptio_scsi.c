@@ -99,6 +99,9 @@ int ptio_scsi_get_information(struct ptio_dev *dev)
 	capacity = ptio_get_be64(&cmd.buf[0]) + 1;
 	lba_size = ptio_get_be32(&cmd.buf[8]);
 	dev->capacity = (capacity * lba_size) >> 9;
+	dev->logical_block_size = lba_size;
+	dev->physical_block_size =
+		lba_size * (1U << (cmd.buf[13] & 0x0f));
 
 	return 0;
 }
